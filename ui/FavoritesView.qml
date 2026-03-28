@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Qt5Compat.GraphicalEffects
 
 Item {
     property var selectedIds: ({})
@@ -217,6 +218,42 @@ Item {
                         font.pixelSize: 13
                         Layout.preferredWidth: 24
                         horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Rectangle {
+                        width: 40
+                        height: 40
+                        radius: 4
+                        color: theme.button_bg
+
+                        Image {
+                            id: favThumb
+                            anchors.fill: parent
+                            source: modelData.thumbnail || ""
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            visible: false
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "\u{1F3B5}"
+                                font.pixelSize: 14
+                                visible: favThumb.status !== Image.Ready
+                            }
+                        }
+
+                        Rectangle {
+                            id: favThumbMask
+                            anchors.fill: parent
+                            radius: 4
+                            visible: false
+                        }
+
+                        OpacityMask {
+                            anchors.fill: parent
+                            source: favThumb
+                            maskSource: favThumbMask
+                        }
                     }
 
                     ColumnLayout {

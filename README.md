@@ -172,9 +172,3 @@ Feel free to:
 * Submit pull requests
 
 ---
-
-## 🌟 Support the project
-
-If you like this project, consider giving it a ⭐ on GitHub!
-
-It really helps a lot 🚀
