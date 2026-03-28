@@ -1,0 +1,13 @@
+BTC
+    wallet : bc1q5227snghgvgpm2t4v6x20xumdkdq7he4wn0ruf
+    qrcode image : donation/qr-btc.png
+-------------
+
+ETH
+    wallet : 0xb7F95e019a7b58D8bcA58e46Aa4183a80863F076
+    qrcode image : donation/qr-eth.png
+-------------
+
+SOL
+    wallet : 8FGv2A9HQzvTna1AA3qYVnySfz4ZVtugnScorE9WwjvY
+    qrcode image : donation/qr-sol.png
