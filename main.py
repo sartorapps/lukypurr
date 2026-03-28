@@ -4,8 +4,17 @@ import io
 import atexit
 
 os.environ["QT_LOGGING_RULES"] = "qt.multimedia*=false"
-os.environ["AV_LOG_LEVEL"] = "quiet"
+os.environ["AV_LOG_LEVEL"] = "panic"
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Fusion"
+
+import ctypes
+try:
+    libc = ctypes.CDLL(None)
+    devnull = os.open(os.devnull, os.O_WRONLY)
+    libc.dup2(devnull, 2)
+    os.close(devnull)
+except Exception:
+    pass
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(base_dir)
