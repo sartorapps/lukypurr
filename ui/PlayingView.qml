@@ -397,7 +397,7 @@ Item {
 
                         Image {
                             anchors.fill: parent
-                            anchors.margins: 14
+                            anchors.margins: 10
                             source: ctrl.isPlaying ? "../assets/pause.svg" : "../assets/play.svg"
                             fillMode: Image.PreserveAspectFit
                             visible: theme.current_theme === "lukypurr"

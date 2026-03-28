@@ -161,7 +161,7 @@ Rectangle {
 
                 Image {
                     anchors.fill: parent
-                    anchors.margins: 8
+                    anchors.margins: 6
                     source: ctrl.isPlaying ? "../assets/pause.svg" : "../assets/play.svg"
                     fillMode: Image.PreserveAspectFit
                     visible: theme.current_theme === "lukypurr"
