@@ -1,6 +1,6 @@
 # 🐱 LukyPurr – Music Player
 
-LukyPurr is a modern and lightweight open-source music player built with Python and Qt/QML.
+LukyPurr is a modern and open-source music player built with Python and Qt/QML.
 It features a clean and elegant interface and streams music from YouTube Music through an **unofficial integration**, focusing on a smooth and visually pleasing listening experience.
 
 ---
