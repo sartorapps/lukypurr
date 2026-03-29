@@ -114,17 +114,6 @@ After the build process, the executable will be available in the output director
 
 ---
 
-
-## ⚠️ Disclaimer
-
-This project uses an **unofficial method** to access and stream music from YouTube Music.
-
-* This project is **not affiliated with, endorsed by, or supported by Google or YouTube**
-* It is intended for **educational and personal use only**
-
-
----
-
 ## 🛠️ Technologies Used
 
 * Python
