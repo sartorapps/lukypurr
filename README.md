@@ -1,6 +1,6 @@
 # 🐱 LukyPurr – Music Player
 
-LukyPurr is a modern and open-source music player built with Python and Qt/QML.
+LukyPurr is a open-source music player built with Python and Qt/QML.
 It features a clean and elegant interface and streams music from YouTube Music through an **unofficial integration**, focusing on a smooth and visually pleasing listening experience.
 
 ---
@@ -106,12 +106,6 @@ Both scripts perform the following steps:
 2. Install dependencies from `requirements.txt`
 3. Build the application into an executable
 
-This ensures:
-
-* No conflicts with system Python packages
-* Reproducible builds
-* Easy setup for end users
-
 ---
 
 ### 📦 Output
@@ -119,14 +113,6 @@ This ensures:
 After the build process, the executable will be available in the output directory (e.g. `dist/`).
 
 ---
-
-### 💡 Tip
-
-On Linux, if the script is not executable, run:
-
-```bash
-chmod +x build.sh
-```
 
 
 ## ⚠️ Disclaimer
@@ -136,12 +122,6 @@ This project uses an **unofficial method** to access and stream music from YouTu
 * This project is **not affiliated with, endorsed by, or supported by Google or YouTube**
 * It is intended for **educational and personal use only**
 
-
----
-
-## 🐾 About Luky
-
-Luky is the inspiration behind this project — a curious little cat who loves music 🐱.
 
 ---
 
@@ -159,16 +139,4 @@ Luky is the inspiration behind this project — a curious little cat who loves m
 This project is licensed under the MIT License.
 See the [LICENSE](LICENSE) file for details.
 
----
 
-## ⭐ Contributing
-
-Contributions are welcome!
-
-Feel free to:
-
-* Open issues
-* Suggest features
-* Submit pull requests
-
----
