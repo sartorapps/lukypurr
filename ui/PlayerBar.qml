@@ -159,12 +159,42 @@ Rectangle {
                     NumberAnimation { duration: 150; easing.type: Easing.OutBack }
                 }
 
+                // Loading spinner (aparece enquanto baixa o stream)
+                Rectangle {
+                    id: spinner
+                    anchors.centerIn: parent
+                    width: 18
+                    height: 18
+                    radius: 9
+                    border.width: 3
+                    border.color: theme.bg_main
+                    visible: ctrl.isLoading
+                    opacity: ctrl.isLoading ? 1 : 0
+
+                    Rectangle {
+                        anchors.top: parent.top
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 3
+                        height: 3
+                        radius: 1.5
+                        color: theme.bg_main
+                    }
+
+                    RotationAnimator on rotation {
+                        running: spinner.visible
+                        from: 0
+                        to: 360
+                        duration: 800
+                        loops: Animation.Infinite
+                    }
+                }
+
                 Image {
                     anchors.fill: parent
                     anchors.margins: 6
                     source: ctrl.isPlaying ? "../assets/pause.svg" : "../assets/play.svg"
                     fillMode: Image.PreserveAspectFit
-                    visible: theme.current_theme === "lukypurr"
+                    visible: theme.current_theme === "lukypurr" && !ctrl.isLoading
                 }
 
                 PlayIcon {
@@ -172,7 +202,7 @@ Rectangle {
                     iconType: ctrl.isPlaying ? "pause" : "play"
                     iconSize: 16
                     iconColor: theme.bg_main
-                    visible: theme.current_theme !== "lukypurr"
+                    visible: theme.current_theme !== "lukypurr" && !ctrl.isLoading
                 }
 
                 MouseArea {

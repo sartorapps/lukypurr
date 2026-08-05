@@ -13,9 +13,11 @@ from services.theme_service import ThemeService
 
 class Controller(QObject):
     searchResultsChanged = Signal()
+    searchErrorChanged = Signal()
     currentTrackChanged = Signal()
     queueChanged = Signal()
     isPlayingChanged = Signal()
+    loadingChanged = Signal()
     viewChanged = Signal()
     spectrumChanged = Signal()
     _newQueueReady = Signal(list)
@@ -23,10 +25,12 @@ class Controller(QObject):
     def __init__(self):
         super().__init__()
         self._search_results = []
+        self._search_error = ""
         self._current_track = {}
         self._queue = []
         self._queue_index = -1
         self._is_playing = False
+        self._loading = False
         self._user_paused = False
         self._loading_track = False
         self._view = "search"
@@ -50,9 +54,11 @@ class Controller(QObject):
         self.theme_service = ThemeService()
 
         self.music_service.searchResults.connect(self._on_search_results)
+        self.music_service.searchFailed.connect(self._on_search_failed)
         self.stream_service.streamUrlReady.connect(self._on_stream_ready)
         self.audio_player.stateChanged.connect(self._on_player_state)
         self.audio_player.pcmReady.connect(self.spectral_service.analyze_pcm)
+        self.audio_player.volumeChanged.connect(self._on_volume_changed)
         self.favorites_service.favoritesChanged.connect(self._on_favorites_changed)
         self.spectral_service.spectrumReady.connect(self._on_spectrum)
         self._newQueueReady.connect(self._on_new_queue_ready)
@@ -63,8 +69,21 @@ class Controller(QObject):
         self.tray_service.trayPrev.connect(self.previous)
         self.tray_service.trayClose.connect(self._on_tray_close)
 
+        # Volume salvo na última sessão
+        try:
+            saved = self.settings_service.volume
+            self.audio_player.set_volume(saved)
+        except Exception:
+            pass
+
     def setup_tray(self):
         self.tray_service.setup()
+
+    def _on_volume_changed(self, vol: float):
+        try:
+            self.settings_service.set_volume(vol)
+        except Exception:
+            pass
 
     @property
     def player_service(self):
@@ -76,6 +95,14 @@ class Controller(QObject):
 
     def _on_search_results(self, results):
         self._search_results = results
+        self._search_error = ""
+        self.searchErrorChanged.emit()
+        self.searchResultsChanged.emit()
+
+    def _on_search_failed(self, message: str):
+        self._search_results = []
+        self._search_error = message
+        self.searchErrorChanged.emit()
         self.searchResultsChanged.emit()
 
     def _on_favorites_changed(self, favorites):
@@ -117,6 +144,9 @@ class Controller(QObject):
             return
         if state == "playing":
             self._loading_track = False
+            if self._loading:
+                self._loading = False
+                self.loadingChanged.emit()
         self._is_playing = state == "playing"
         self.isPlayingChanged.emit()
         if state == "stopped" and not self._user_paused:
@@ -184,6 +214,8 @@ class Controller(QObject):
     def _load_current_track(self):
         if 0 <= self._queue_index < len(self._queue):
             self._loading_track = True
+            self._loading = True
+            self.loadingChanged.emit()
             self._current_track = self._queue[self._queue_index]
             self.currentTrackChanged.emit()
             self.queueChanged.emit()
@@ -227,7 +259,6 @@ class Controller(QObject):
     def next(self):
         if not self._queue:
             return
-        self.audio_player.stop()
         if self._queue_index < len(self._queue) - 1:
             self._queue_index += 1
             self._load_current_track()
@@ -328,6 +359,10 @@ class Controller(QObject):
     def searchResults(self):
         return self._search_results
 
+    @Property(str, notify=searchErrorChanged)
+    def searchError(self):
+        return self._search_error
+
     @Property("QVariant", notify=currentTrackChanged)
     def currentTrack(self):
         return self._current_track
@@ -335,6 +370,10 @@ class Controller(QObject):
     @Property(bool, notify=isPlayingChanged)
     def isPlaying(self):
         return self._is_playing
+
+    @Property(bool, notify=loadingChanged)
+    def isLoading(self):
+        return self._loading
 
     @Property(str, notify=viewChanged)
     def currentView(self):

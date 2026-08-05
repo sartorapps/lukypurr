@@ -81,9 +81,13 @@ Item {
         }
 
         Text {
-            text: ctrl.searchResults.length > 0 ? "Results" : "Search for music"
-            color: theme.text_secondary
+            text: ctrl.searchError.length > 0
+                  ? "⚠ " + ctrl.searchError
+                  : (ctrl.searchResults.length > 0 ? "Results" : "Search for music")
+            color: ctrl.searchError.length > 0 ? "#E57373" : theme.text_secondary
             font.pixelSize: 13
+            wrapMode: Text.Wrap
+            Layout.fillWidth: true
         }
 
         ListView {

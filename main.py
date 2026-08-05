@@ -1,23 +1,31 @@
 import os
 import sys
-import io
 import atexit
+import logging
 
 os.environ["QT_LOGGING_RULES"] = "qt.multimedia*=false"
 os.environ["AV_LOG_LEVEL"] = "panic"
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Fusion"
 
-import ctypes
-try:
-    libc = ctypes.CDLL(None)
-    devnull = os.open(os.devnull, os.O_WRONLY)
-    libc.dup2(devnull, 2)
-    os.close(devnull)
-except Exception:
-    pass
-
 base_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(base_dir)
+
+# Logging em arquivo em vez de engolir stderr (o antigo dup2 pro /dev/null
+# escondia TODOS os erros — o debug virava um inferno).
+LOG_DIR = os.path.join(base_dir, "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
+_LOG_FILE = os.path.join(LOG_DIR, "lukypurr.log")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.FileHandler(_LOG_FILE, encoding="utf-8"),
+        logging.StreamHandler(sys.stderr),
+    ],
+)
+log = logging.getLogger("lukypurr")
+log.info("=== LukyPurr iniciando ===")
 
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
@@ -55,6 +63,7 @@ def main():
     engine.load(QUrl.fromLocalFile(qml_path))
 
     if not engine.rootObjects():
+        log.critical("Falha ao carregar QML — sem rootObjects. Ver logs acima.")
         sys.exit(-1)
 
     QTimer.singleShot(100, ctrl.setup_tray)
@@ -62,6 +71,7 @@ def main():
     exit_code = app.exec()
     ctrl.audio_player.stop()
     ctrl.spectral_service.cleanup()
+    log.info("=== LukyPurr encerrando (exit %s) ===", exit_code)
     sys.exit(exit_code)
 
 

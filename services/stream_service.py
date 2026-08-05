@@ -4,7 +4,10 @@ import threading
 import tempfile
 import os
 import shutil
+import sys
+import logging
 
+log = logging.getLogger("lukypurr.stream")
 
 MAX_CACHE = 20
 
@@ -30,6 +33,39 @@ class StreamService(QObject):
         self._cache = {}
         self._lock = threading.Lock()
         self._temp_dir = tempfile.mkdtemp(prefix=f"lukypurr_{os.getpid()}_")
+        # YouTube muda o tempo todo; yt-dlp desatualizado = stream quebrado.
+        # Atualiza em background, silencioso, sem travar o boot do app.
+        threading.Thread(target=self._self_update, daemon=True).start()
+
+    def _self_update(self):
+        try:
+            if getattr(sys, "frozen", False):
+                # Binário congelado (PyInstaller): auto-update via pip quebraria
+                # o bundle. Deixar quieto.
+                return
+            old = yt_dlp.version.__version__
+            try:
+                # API nova: yt_dlp.update virou módulo com classe Updater.
+                from yt_dlp.update import Updater
+                ydl = yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True})
+                updated = Updater(ydl).update()
+            except Exception as e:
+                # Instalado via pip: o auto-update interno é bloqueado, o yt-dlp
+                # manda atualizar pelo próprio pip. Fallback silencioso.
+                log.debug("auto-update interno indisponivel (%s) — tentando pip", e)
+                import subprocess
+                r = subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "-q", "--upgrade", "yt-dlp"],
+                    capture_output=True, timeout=60,
+                )
+                updated = r.returncode == 0
+            new = yt_dlp.version.__version__
+            if updated and old != new:
+                log.info("yt-dlp atualizado: %s -> %s", old, new)
+            else:
+                log.debug("yt-dlp ja na versao mais recente (%s)", old)
+        except Exception as e:
+            log.warning("Falha ao atualizar yt-dlp: %s", e)
 
     @Slot(str)
     def get_stream_url(self, video_id: str):

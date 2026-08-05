@@ -9,11 +9,13 @@ class SettingsService(QObject):
     gradientColorChanged = Signal()
     gradientIntensityChanged = Signal()
     gradientOpacityChanged = Signal()
+    volumeChanged = Signal()
 
     DEFAULTS = {
         "gradient_color": "#1DB954",
         "gradient_intensity": 60,
         "gradient_opacity": 60,
+        "volume": 80,
     }
 
     def __init__(self):
@@ -71,3 +73,14 @@ class SettingsService(QObject):
     @Property(float, notify=gradientOpacityChanged)
     def gradient_opacity(self):
         return self._data.get("gradient_opacity", self.DEFAULTS["gradient_opacity"])
+
+    @Slot(float)
+    def set_volume(self, value: float):
+        self._data["volume"] = max(0, min(100, value))
+        self._save()
+        self.volumeChanged.emit()
+        self.settingsChanged.emit()
+
+    @Property(float, notify=volumeChanged)
+    def volume(self):
+        return self._data.get("volume", self.DEFAULTS["volume"])
