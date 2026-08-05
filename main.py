@@ -7,12 +7,20 @@ os.environ["QT_LOGGING_RULES"] = "qt.multimedia*=false"
 os.environ["AV_LOG_LEVEL"] = "panic"
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Fusion"
 
-base_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(base_dir)
+# No modo empacotado (PyInstaller), __file__ aponta pro bundle temporário
+# (_MEIPASS) que é apagado ao fechar — os RESOURCES ficam lá, mas o LOG
+# precisa de um lugar permanente: a pasta do executável.
+if getattr(sys, "frozen", False):
+    RESOURCE_DIR = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    BASE_DIR = os.path.dirname(os.path.abspath(sys.executable))
+else:
+    RESOURCE_DIR = BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+os.chdir(BASE_DIR)
 
 # Logging em arquivo em vez de engolir stderr (o antigo dup2 pro /dev/null
 # escondia TODOS os erros — o debug virava um inferno).
-LOG_DIR = os.path.join(base_dir, "logs")
+LOG_DIR = os.path.join(BASE_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 _LOG_FILE = os.path.join(LOG_DIR, "lukypurr.log")
 
@@ -35,10 +43,10 @@ from controller import Controller
 
 
 def get_icon_path():
-    png_path = os.path.join(base_dir, "assets", "lukypurr_icon.png")
+    png_path = os.path.join(RESOURCE_DIR, "assets", "lukypurr_icon.png")
     if os.path.exists(png_path):
         return png_path
-    return os.path.join(base_dir, "assets", "icon.svg")
+    return os.path.join(RESOURCE_DIR, "assets", "icon.svg")
 
 
 def main():
@@ -59,7 +67,7 @@ def main():
     engine.rootContext().setContextProperty("settingsService", ctrl.settings_service)
     engine.rootContext().setContextProperty("theme", ctrl.theme_service)
 
-    qml_path = os.path.join(base_dir, "ui", "Main.qml")
+    qml_path = os.path.join(RESOURCE_DIR, "ui", "Main.qml")
     engine.load(QUrl.fromLocalFile(qml_path))
 
     if not engine.rootObjects():
