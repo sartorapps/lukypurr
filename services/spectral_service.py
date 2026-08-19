@@ -63,7 +63,7 @@ class SpectralService(QObject):
 
         rms = float(np.sqrt(np.mean(pcm_data ** 2)))
         if rms < 0.005:
-            self._smoothed = [s * 0.85 for s in self._smoothed]
+            self._smoothed = [float(s) * 0.85 for s in self._smoothed]
             self.spectrumReady.emit(list(self._smoothed))
             return
 
@@ -91,24 +91,31 @@ class SpectralService(QObject):
             if end <= start:
                 end = start + 1
             chunk = magnitudes[start:end]
-            energy = float(np.mean(chunk))
+            # Mix média+pico: média estabiliza, pico responde a transientes
+            # (bateria, chimbal). Só média deixava o espectro "morto".
+            energy = 0.5 * float(np.mean(chunk)) + 0.5 * float(np.max(chunk))
             bands.append(energy)
 
         bands = self._interpolate_zeros(bands)
 
-        # Dynamic normalization using history
+        # Normalização dinâmica POR BANDA: cada banda referencia o próprio
+        # histórico (percentil 90). Antes o ref era global — o grave/vocal
+        # dominante esmagava os agudos (energia menor) e o espectro morria
+        # nas pontas altas. Piso proporcional ao ref global evita que banda
+        # morta (só ruído) vire barra falsa.
         self._history.append(bands)
         if len(self._history) > self._history_max:
             self._history.pop(0)
 
-        all_vals = [v for frame in self._history for v in frame]
-        ref = float(np.percentile(all_vals, 90))
-        if ref < 1.0:
-            ref = 1.0
+        hist = np.array(self._history)
+        per_band = np.percentile(hist, 90, axis=0)
+        global_ref = float(np.percentile(hist, 90))
+        floor = max(global_ref * 0.2, 1e-4)
+        refs = np.maximum(per_band, floor)
 
         # Normalize and compress
         normalized = []
-        for b in bands:
+        for b, ref in zip(bands, refs):
             ratio = b / ref
             if ratio < 0.02:
                 normalized.append(0.0)
@@ -128,7 +135,7 @@ class SpectralService(QObject):
         for i in range(self._num_bands):
             self._smoothed[i] = self._smoothed[i] * 0.65 + weighted[i] * 0.35
 
-        result = [max(0.0, min(0.85, v)) for v in self._smoothed]
+        result = [max(0.0, min(0.85, float(v))) for v in self._smoothed]
         self.spectrumReady.emit(result)
 
     def _build_band_edges(self, num_bins):

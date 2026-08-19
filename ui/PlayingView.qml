@@ -15,7 +15,19 @@ Item {
         }
         function onSpectrumChanged() {
             spectrumData = ctrl.spectrum
+            updatePeaks()
         }
+    }
+
+    Component.onCompleted: initPeaks()
+
+    // Decay contínuo dos picos mesmo quando o espectro não muda (50ms/ciclo)
+    Timer {
+        id: peakDecayTimer
+        interval: 33
+        repeat: true
+        running: visible
+        onTriggered: updatePeaks()
     }
 
     function formatTime(seconds) {
@@ -30,6 +42,31 @@ Item {
         var bandIndex = pos < 20 ? pos : (39 - pos)
         bandIndex = Math.min(bandIndex, spectrumData.length - 1)
         return Math.max(8, spectrumData[bandIndex] * visualizer.height * 0.65)
+    }
+
+    // Picos (peak hold): seguram o valor mais alto da barra e caem devagar.
+    // Armazenados por índice — o Timer em visualizer decai e repinta.
+    property var peaks: ([])
+
+    function initPeaks() {
+        peaks = []
+        for (var i = 0; i < bandCount; i++) {
+            peaks.push(0.0)
+        }
+    }
+
+    function updatePeaks() {
+        if (!spectrumData || spectrumData.length === 0) return
+        for (var i = 0; i < bandCount; i++) {
+            var bandIndex = i < 20 ? i : (39 - i)
+            bandIndex = Math.min(bandIndex, spectrumData.length - 1)
+            var target = Math.max(8, spectrumData[bandIndex] * visualizer.height * 0.65)
+            if (target > peaks[i]) {
+                peaks[i] = target
+            } else {
+                peaks[i] *= 0.92  // decay do pico
+            }
+        }
     }
 
     function getBandColor(pos) {
@@ -85,6 +122,26 @@ Item {
 
                 Behavior on height {
                     NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                }
+
+                // Cap de pico (peak hold): marca o ponto mais alto atingido
+                // pela barra e desce devagar (decay em updatePeaks)
+                Rectangle {
+                    width: parent.width
+                    height: 3
+                    radius: 2
+                    color: Qt.lighter(getBandColor(index), 1.8)
+                    x: 0
+                    y: visualizer.height - peaks[index] - height
+                    opacity: peaks[index] > 8.5 ? 0.9 : 0
+                    visible: peaks[index] > 8.5
+
+                    Behavior on y {
+                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on opacity {
+                        NumberAnimation { duration: 120 }
+                    }
                 }
             }
         }
