@@ -3,6 +3,7 @@ import yt_dlp
 import threading
 import tempfile
 import os
+import json
 import shutil
 import sys
 import logging
@@ -41,29 +42,56 @@ class StreamService(QObject):
         try:
             if getattr(sys, "frozen", False):
                 # Binário congelado (PyInstaller): auto-update via pip quebraria
-                # o bundle. Deixar quieto.
+                # o bundle. Deixar quieto. O bundle embute o yt-dlp fixo do build.
                 return
+
             old = yt_dlp.version.__version__
+            log.debug("yt-dlp antes do auto-update: %s", old)
+
+            # O release estável do PyPI (2026.7.4) está QUEBRADO contra o bloqueio
+            # 403 atual do YouTube. O conserto só existe no canal NIGHTLY. Por isso
+            # NÃO usamos `pip install --upgrade yt-dlp` (voltaria pro release quebrado
+            # e reverteria qualquer nightly instalado). Baixamos o tarball do nightly
+            # direto do GitHub e reinstalamos no venv (idempotente, sem sudo).
+            import tempfile
+            import urllib.request
+
+            # Tag do nightly: pegamos a mais recente via API do GitHub.
             try:
-                # API nova: yt_dlp.update virou módulo com classe Updater.
-                from yt_dlp.update import Updater
-                ydl = yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True})
-                updated = Updater(ydl).update()
+                api = "https://api.github.com/repos/yt-dlp/yt-dlp-nightly-builds/releases/latest"
+                with urllib.request.urlopen(api, timeout=30) as resp:
+                    data = json.loads(resp.read().decode())
+                tag = data["tag_name"]
             except Exception as e:
-                # Instalado via pip: o auto-update interno é bloqueado, o yt-dlp
-                # manda atualizar pelo próprio pip. Fallback silencioso.
-                log.debug("auto-update interno indisponivel (%s) — tentando pip", e)
+                log.warning("Nao consegui descobrir o nightly mais recente (%s) — mantendo atual", e)
+                return
+
+            if old.startswith(tag.split(".")[0]):
+                # old já é esse nightly (ex: 2026.08.18... == tag 2026.08.18.122307)
+                log.debug("yt-dlp ja e o nightly %s", old)
+                return
+
+            tarball_url = f"https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/download/{tag}/yt-dlp.tar.gz"
+            tmp = os.path.join(tempfile.gettempdir(), f"lukypurr_yt_dlp_{tag}.tar.gz")
+            try:
+                urllib.request.urlretrieve(tarball_url, tmp)
                 import subprocess
                 r = subprocess.run(
-                    [sys.executable, "-m", "pip", "install", "-q", "--upgrade", "yt-dlp"],
-                    capture_output=True, timeout=60,
+                    [sys.executable, "-m", "pip", "install", "--force-reinstall",
+                     "--no-deps", "-q", tmp],
+                    capture_output=True, timeout=120,
                 )
-                updated = r.returncode == 0
+                if r.returncode != 0:
+                    log.warning("Falha ao instalar nightly %s (pip rc=%s)", tag, r.returncode)
+                    return
+            finally:
+                try:
+                    os.remove(tmp)
+                except Exception:
+                    pass
+
             new = yt_dlp.version.__version__
-            if updated and old != new:
-                log.info("yt-dlp atualizado: %s -> %s", old, new)
-            else:
-                log.debug("yt-dlp ja na versao mais recente (%s)", old)
+            log.info("yt-dlp atualizado para nightly: %s -> %s", old, new)
         except Exception as e:
             log.warning("Falha ao atualizar yt-dlp: %s", e)
 

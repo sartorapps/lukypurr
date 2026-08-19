@@ -5,7 +5,11 @@ import random
 
 
 def extract_thumbnail(item: dict) -> str:
-    thumbs = item.get("thumbnails", [])
+    # A API às vezes devolve "thumbnails" (lista) e às vezes "thumbnail"
+    # (dict único) — normaliza os dois casos.
+    thumbs = item.get("thumbnails")
+    if not thumbs and isinstance(item.get("thumbnail"), dict):
+        thumbs = [item["thumbnail"]]
     if thumbs:
         url = thumbs[-1].get("url", "")
         if url:
@@ -94,6 +98,8 @@ class MusicService(QObject):
             watch_playlist = self.ytm.get_watch_playlist(video_id, limit=15)
             tracks = []
             for item in watch_playlist.get("tracks", []):
+                # A API do YTMusic mudou: antes vinha "thumbnails" (lista), hoje
+                # vem "thumbnail" (dict único). Aceita os dois pra não perder a capa.
                 track = {
                     "videoId": item.get("videoId", ""),
                     "title": item.get("title", "Unknown"),

@@ -1,7 +1,10 @@
 PySide6>=6.6.0
 PySide6-Addons>=6.6.0
 ytmusicapi>=1.0.0
-yt-dlp>=2024.0.0
 numpy>=1.24.0
 platformdirs>=4.0.0
 pillow>=10.0.0
+# NOTA: yt-dlp NAO esta aqui de proposito. O release estavel do PyPI (>=2024)
+# esta QUEBRADO contra o bloqueio 403 atual do YouTube (metadados passam,
+# download de audio nao). O conserto so existe no canal NIGHTLY, instalado
+# direto no build.sh e no auto-update do app (services/stream_service.py).
