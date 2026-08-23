@@ -45,7 +45,7 @@ Make sure Python is installed and available in your system PATH before running t
 
 ```bash
 git clone https://github.com/sartorapps/lukypurr.git
-cd lukypurr-music-player
+cd lukypurr
 ```
 
 ---
