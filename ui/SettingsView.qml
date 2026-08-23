@@ -473,18 +473,10 @@ Item {
                 spacing: 12
 
                 Text {
-                    text: "Pasta de Download (MP3)"
+                    text: "Download folder"
                     color: theme.text_primary
                     font.pixelSize: 16
                     font.bold: true
-                }
-
-                Text {
-                    text: "Onde salvar a musica que esta tocando quando voce clica em baixar."
-                    color: theme.text_muted
-                    font.pixelSize: 13
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
                 }
 
                 RowLayout {
@@ -505,7 +497,7 @@ Item {
                             anchors.leftMargin: 10
                             anchors.right: parent.right
                             anchors.rightMargin: 10
-                            text: settingsService.download_folder || "Nenhuma pasta selecionada"
+                            text: settingsService.download_folder || "No folder selected"
                             color: settingsService.download_folder ? theme.text_primary : theme.text_muted
                             font.pixelSize: 12
                             elide: Text.ElideMiddle

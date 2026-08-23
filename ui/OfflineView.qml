@@ -139,14 +139,14 @@ Item {
                     spacing: 4
 
                     Text {
-                        text: "Nenhuma pasta de MP3 configurada"
+                        text: "No MP3 folder configured"
                         color: theme.text_primary
                         font.pixelSize: 14
                         font.bold: true
                     }
 
                     Text {
-                        text: "Baixe musicas pela barra de reproducao ou escolha a pasta onde estao seus arquivos."
+                        text: "Download music from the player bar or choose the folder where your files are."
                         color: theme.text_muted
                         font.pixelSize: 12
                         wrapMode: Text.WordWrap
@@ -183,7 +183,7 @@ Item {
         Text {
             Layout.fillWidth: true
             visible: ctrl.downloadFolder !== "" && ctrl.offline_tracks.length === 0
-            text: "Nenhum arquivo de audio encontrado em:\n" + (ctrl.downloadFolder || "")
+            text: "No audio files found in:\n" + (ctrl.downloadFolder || "")
             color: theme.text_muted
             font.pixelSize: 13
             wrapMode: Text.WordWrap
