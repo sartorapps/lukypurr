@@ -479,6 +479,14 @@ Item {
                     font.bold: true
                 }
 
+                Text {
+                    text: "Where to save the song you're downloading."
+                    color: theme.text_muted
+                    font.pixelSize: 13
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+
                 RowLayout {
                     spacing: 10
                     Layout.fillWidth: true
@@ -514,7 +522,7 @@ Item {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "Escolher"
+                            text: "Choose"
                             color: theme.text_primary
                             font.pixelSize: 13
                             font.bold: true
@@ -530,13 +538,7 @@ Item {
                     }
                 }
 
-                Text {
-                    text: "Dica: use um pendrive ou a pasta do carro para levar as musicas sem internet."
-                    color: theme.text_muted
-                    font.pixelSize: 11
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
+                Item { Layout.preferredHeight: 20 }
             }
 
             Item { Layout.preferredHeight: 20 }
