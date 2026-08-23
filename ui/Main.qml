@@ -90,6 +90,14 @@ ApplicationWindow {
                     onClicked: ctrl.set_view("queue")
                 }
 
+                NavButton {
+                    icon: "\u{1F4C2}"
+                    label: "Offline"
+                    active: currentView === "offline"
+                    badge: ctrl.offline_tracks.length > 0 ? ctrl.offline_tracks.length.toString() : ""
+                    onClicked: ctrl.set_view("offline")
+                }
+
                 Item { Layout.fillHeight: true }
 
                 NavButton {
@@ -166,6 +174,11 @@ ApplicationWindow {
                 QueueView {
                     anchors.fill: parent
                     visible: currentView === "queue"
+                }
+
+                OfflineView {
+                    anchors.fill: parent
+                    visible: currentView === "offline"
                 }
 
                 DonationView {

@@ -121,3 +121,29 @@ class MusicService(QObject):
                 "Falha ao gerar recomendações para %s: %s", video_id, e
             )
             return []
+
+    def search_video_id(self, artist: str, title: str):
+        """Busca o videoId do YouTube Music a partir de artista + titulo.
+
+        Usado pela transicao offline -> online: a faixa baixada nao tem
+        videoId, entao buscamos pelo nome para descobrir o id e entao
+        gerar a fila de recomendacoes online. Devolve '' se nao achar.
+        """
+        self._init_event.wait(timeout=10)
+        if not self.ytm:
+            return ""
+        query = " ".join(p for p in (artist, title) if p).strip()
+        if not query:
+            return ""
+        try:
+            results = self.ytm.search(query, filter="songs")
+            for item in results[:10]:
+                vid = item.get("videoId", "")
+                if vid:
+                    return vid
+        except Exception as e:
+            import logging
+            logging.getLogger("lukypurr.music").warning(
+                "Falha ao buscar videoId para '%s': %s", query, e
+            )
+        return ""

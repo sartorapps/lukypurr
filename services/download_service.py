@@ -90,11 +90,21 @@ class DownloadService(QObject):
                 "outtmpl": outtmpl,
                 "quiet": True,
                 "no_warnings": True,
-                "postprocessors": [{
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": MP3_BITRATE,
-                }],
+                "writethumbnail": True,
+                "postprocessors": [
+                    {
+                        "key": "FFmpegExtractAudio",
+                        "preferredcodec": "mp3",
+                        "preferredquality": MP3_BITRATE,
+                    },
+                    # Embute a capa no MP3 (aparece no player do carro) e,
+                    # com writethumbnail=True acima, deixa o .jpg ao lado
+                    # (usado pelo app para exibir a capa na aba Offline).
+                    {
+                        "key": "EmbedThumbnail",
+                        "already_have_thumbnail": False,
+                    },
+                ],
                 "keepvideo": False,
             }
 
