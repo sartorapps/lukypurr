@@ -1,7 +1,10 @@
+import logging
 from PySide6.QtCore import QObject, Slot, Signal, Property
 from platformdirs import user_data_dir
 import json
 import os
+
+log = logging.getLogger("lukypurr.settings")
 
 
 class SettingsService(QObject):
@@ -16,6 +19,7 @@ class SettingsService(QObject):
         "gradient_intensity": 60,
         "gradient_opacity": 60,
         "volume": 80,
+        "download_folder": "",
     }
 
     def __init__(self):
@@ -84,3 +88,14 @@ class SettingsService(QObject):
     @Property(float, notify=volumeChanged)
     def volume(self):
         return self._data.get("volume", self.DEFAULTS["volume"])
+
+    @Property(str, notify=settingsChanged)
+    def download_folder(self):
+        return self._data.get("download_folder", self.DEFAULTS["download_folder"])
+
+    @Slot(str)
+    def set_download_folder(self, path: str):
+        log.info("set_download_folder recebeu: %r", path)
+        self._data["download_folder"] = path or ""
+        self._save()
+        self.settingsChanged.emit()

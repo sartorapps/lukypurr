@@ -369,6 +369,53 @@ Rectangle {
                     }
                 }
             }
+
+            Item { Layout.preferredWidth: 6 }
+
+            // Download como MP3 (modo offline / carro)
+            RowLayout {
+                spacing: 6
+
+                Rectangle {
+                    width: 34
+                    height: 30
+                    radius: 15
+                    color: dlMouse.containsMouse ? (ctrl.isDownloading ? theme.accent + "33" : theme.text_primary + "15") : "transparent"
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: ctrl.isDownloading ? "\u23F3" : "\u{1F4BE}"
+                        color: ctrl.isDownloading ? theme.accent : theme.text_muted
+                        font.pixelSize: 15
+
+                        scale: dlMouse.containsMouse ? 1.2 : 1.0
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutBack }
+                        }
+                    }
+
+                    MouseArea {
+                        id: dlMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: ctrl.pick_and_download_mp3()
+                    }
+                }
+
+                Text {
+                    text: ctrl.downloadMessage
+                    color: ctrl.downloadStatus === "error" ? "#E74C3C" : (ctrl.isDownloading ? theme.accent : theme.text_muted)
+                    font.pixelSize: 11
+                    Layout.preferredWidth: ctrl.downloadMessage ? 120 : 0
+                    visible: ctrl.downloadMessage !== ""
+                    elide: Text.ElideRight
+                }
+            }
         }
     }
 }

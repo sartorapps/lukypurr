@@ -65,6 +65,7 @@ def main():
     engine.rootContext().setContextProperty("playerService", ctrl.audio_player)
     engine.rootContext().setContextProperty("trayService", ctrl.tray_service)
     engine.rootContext().setContextProperty("settingsService", ctrl.settings_service)
+    engine.rootContext().setContextProperty("downloadService", ctrl.download_service)
     engine.rootContext().setContextProperty("theme", ctrl.theme_service)
 
     qml_path = os.path.join(RESOURCE_DIR, "ui", "Main.qml")

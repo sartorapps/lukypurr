@@ -1,6 +1,10 @@
+import logging
 import threading
 import time
 from PySide6.QtCore import QObject, Slot, Signal, Property, QTimer
+from PySide6.QtWidgets import QFileDialog
+
+log = logging.getLogger("lukypurr.controller")
 from services.music_service import MusicService
 from services.stream_service import StreamService
 from services.audio_player import AudioPlayer
@@ -9,6 +13,7 @@ from services.tray_service import TrayService
 from services.spectral_service import SpectralService
 from services.settings_service import SettingsService
 from services.theme_service import ThemeService
+from services.download_service import DownloadService
 
 
 class Controller(QObject):
@@ -21,6 +26,7 @@ class Controller(QObject):
     viewChanged = Signal()
     spectrumChanged = Signal()
     _newQueueReady = Signal(list)
+    downloadStatusChanged = Signal()
 
     def __init__(self):
         super().__init__()
@@ -52,6 +58,7 @@ class Controller(QObject):
         self.spectral_service = SpectralService()
         self.settings_service = SettingsService()
         self.theme_service = ThemeService()
+        self.download_service = DownloadService()
 
         self.music_service.searchResults.connect(self._on_search_results)
         self.music_service.searchFailed.connect(self._on_search_failed)
@@ -61,6 +68,7 @@ class Controller(QObject):
         self.audio_player.volumeChanged.connect(self._on_volume_changed)
         self.favorites_service.favoritesChanged.connect(self._on_favorites_changed)
         self.spectral_service.spectrumReady.connect(self._on_spectrum)
+        self.download_service.downloadStatusChanged.connect(self.downloadStatusChanged.emit)
         self._newQueueReady.connect(self._on_new_queue_ready)
 
         self.tray_service.trayPlay.connect(self.resume)
@@ -227,6 +235,53 @@ class Controller(QObject):
                 self.tray_service.update_tooltip(tooltip)
 
     @Slot()
+    def download_current_as_mp3(self):
+        track = self._current_track
+        if not track:
+            self.download_service._set("error", "Nenhuma musica tocando")
+            return
+        video_id = track.get("videoId", "")
+        if not video_id:
+            self.download_service._set("error", "Faixa sem videoId (nao e do YouTube)")
+            return
+        folder = self.settings_service.download_folder
+        self.download_service.download_as_mp3(
+            video_id,
+            track.get("title", ""),
+            track.get("artist", ""),
+            folder,
+        )
+
+    @Slot()
+    def pick_download_folder(self):
+        """Abre o seletor de pasta nativo (confiavel no KDE/Wayland e
+        Windows, via QFileDialog) e grava em settings. Usado por Settings
+        e pelo botao de download."""
+        start = str(self.settings_service.download_folder) or ""
+        folder = QFileDialog.getExistingDirectory(
+            None, "Escolha a pasta para salvar os MP3", start
+        )
+        if folder:
+            self.settings_service.set_download_folder(folder)
+            log.info("pasta de download definida: %s", folder)
+        else:
+            log.info("selecao de pasta cancelada pelo usuario")
+
+    @Slot()
+    def pick_and_download_mp3(self):
+        """Se ja tem pasta configurada, baixa direto. Caso contrario, abre
+        o seletor nativo e entao baixa a faixa que esta tocando."""
+        if not self._current_track:
+            self.download_service._set("error", "Nenhuma musica tocando")
+            return
+        if not self.settings_service.download_folder:
+            self.pick_download_folder()
+        if not self.settings_service.download_folder:
+            # usuario cancelou a selecao de pasta: nao baixa
+            return
+        self.download_current_as_mp3()
+
+    @Slot()
     def pause(self):
         self._user_paused = True
         self.audio_player.pause()
@@ -390,3 +445,19 @@ class Controller(QObject):
     @Property(list, notify=spectrumChanged)
     def spectrum(self):
         return self._spectrum
+
+    @Property(str, notify=downloadStatusChanged)
+    def downloadStatus(self):
+        return self.download_service.downloadStatus
+
+    @Property(str, notify=downloadStatusChanged)
+    def downloadMessage(self):
+        return self.download_service.downloadMessage
+
+    @Property(bool, notify=downloadStatusChanged)
+    def isDownloading(self):
+        return self.download_service.isDownloading
+
+    @Property(str, notify=downloadStatusChanged)
+    def downloadFolder(self):
+        return self.settings_service.download_folder

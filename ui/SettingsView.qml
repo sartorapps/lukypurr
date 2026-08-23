@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Dialogs
+import QtCore
 
 Item {
     Flickable {
@@ -460,6 +462,88 @@ Item {
                         font.pixelSize: 13
                         Layout.preferredWidth: 40
                     }
+                }
+            }
+
+            Item { Layout.preferredHeight: 20 }
+
+            // Pasta de download (MP3 offline / carro)
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 12
+
+                Text {
+                    text: "Pasta de Download (MP3)"
+                    color: theme.text_primary
+                    font.pixelSize: 16
+                    font.bold: true
+                }
+
+                Text {
+                    text: "Onde salvar a musica que esta tocando quando voce clica em baixar."
+                    color: theme.text_muted
+                    font.pixelSize: 13
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+
+                RowLayout {
+                    spacing: 10
+                    Layout.fillWidth: true
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 36
+                        radius: 6
+                        color: theme.bg_input
+                        border.color: theme.border
+                        border.width: 1
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: 10
+                            anchors.right: parent.right
+                            anchors.rightMargin: 10
+                            text: settingsService.download_folder || "Nenhuma pasta selecionada"
+                            color: settingsService.download_folder ? theme.text_primary : theme.text_muted
+                            font.pixelSize: 12
+                            elide: Text.ElideMiddle
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 110
+                        height: 36
+                        radius: 6
+                        color: folderBtnMouse.containsMouse ? theme.bg_hover : theme.button_bg
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Escolher"
+                            color: theme.text_primary
+                            font.pixelSize: 13
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            id: folderBtnMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: ctrl.pick_download_folder()
+                        }
+                    }
+                }
+
+                Text {
+                    text: "Dica: use um pendrive ou a pasta do carro para levar as musicas sem internet."
+                    color: theme.text_muted
+                    font.pixelSize: 11
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
                 }
             }
 
